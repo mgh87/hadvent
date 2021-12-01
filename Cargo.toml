@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 structopt  = "0.3.13"
+crossterm = "0.20"
+tui = { version = "0.16", default-features = false, features = ['crossterm'] }
+unicode-width = "0.1"
