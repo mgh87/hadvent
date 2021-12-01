@@ -20,30 +20,95 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
 use unicode_width::UnicodeWidthStr;
+use tui::widgets::canvas::{Canvas, Rectangle, Line};
+use std::ops::Add;
+use hang::Triangle;
+use tui::layout::Alignment;
+use std::collections::HashSet;
 
-enum InputMode {
-    Normal
-}
+const TRIANGLE1: Triangle =  Triangle {
+    p1: (10.0, 10.0),
+    p2: (45.0, 45.0),
+    p3: (50.0, 10.0),
+    color: Color::Yellow,
+};
+
+const TRIANGLE2: Triangle =  Triangle {
+    p1: (55.0, 45.0),
+    p2: (90.0, 50.0),
+    p3: (90.0, 10.0),
+    color: Color::Yellow,
+};
+
+const TRIANGLE3: Triangle =  Triangle {
+    p2: (90.0, 90.0),
+    p1: (50.0, 90.0),
+    p3: (55.0, 55.0),
+    color: Color::Yellow,
+};
+
+const TRIANGLE4: Triangle =  Triangle {
+    p1: (10.0, 90.0),
+    p2: (45.0, 55.0),
+    p3: (10.0, 50.0),
+    color: Color::Yellow,
+};
+
+const CENTER: Rectangle =  Rectangle {
+    x: 45.0,
+    y: 45.0,
+    width: 10.0,
+    color: Color::Yellow,
+    height: 10.0
+};
+
+const LINE_1: Line =  Line {
+    x1: 45.0,
+    y1: 45.0,
+    x2: 55.0,
+    y2: 55.0,
+    color: Color::LightGreen
+};
+const LINE_2: Line =  Line {
+    x1: 45.0,
+    y1: 55.0,
+    x2: 55.0,
+    y2: 45.0,
+    color: Color::LightGreen
+};
+
 
 /// App holds the state of the application
 struct App {
     /// Current value of the input box
     input: String,
     /// History of recorded messages
-    messages: Vec<String>,
+    word: String,
+    fails: i8,
+    hidden_letters: HashSet<char>
 }
 
 impl Default for App {
     fn default() -> App {
+        App::new(String::from("Masupilami"))
+    }
+}
+
+impl App {
+    fn new(word: String) -> App {
+        let upperword = word.to_uppercase();
         App {
             input: String::new(),
-            messages: Vec::new(),
+            hidden_letters: upperword.chars().collect::<HashSet<_>>(),
+            word: upperword,
+            fails: 0,
         }
     }
+
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -80,14 +145,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
         if let Event::Key(key) = event::read()? {
             match key.code {
-                KeyCode::Enter => {
-                    app.messages.push(app.input.drain(..).collect());
-                }
                 KeyCode::Char(c) => {
-                    app.input.push(c);
-                }
-                KeyCode::Backspace => {
-                    app.input.pop();
+                    if c.is_ascii_alphabetic() {
+                        let upper_c = c.to_ascii_uppercase();
+                        if !app.input.contains(&*upper_c.to_string()) && !app.hidden_letters.contains(&upper_c.clone()) {
+                            app.input = app.input.add(&*upper_c.to_string());
+                        }
+                        else {
+                            app.fails = app.fails + 1;
+                        }
+                    }
+
                 }
                 KeyCode::Esc => {
                     return Ok(());
@@ -98,13 +166,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(2)
         .constraints(
             [
                 Constraint::Length(1),
+                Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Min(1),
             ]
@@ -137,16 +206,24 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 chunks[1].y + 1,
             );
 
-    let messages: Vec<ListItem> = app
-        .messages
-        .iter()
-        .enumerate()
-        .map(|(i, m)| {
-            let content = vec![Spans::from(Span::raw(format!("{}: {}", i, m)))];
-            ListItem::new(content)
+    let word = Paragraph::new(app.word.as_ref())
+        .style(Style::default())
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman [{}]",app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))));
+    f.render_widget(word, chunks[2]);
+
+    let canvas = Canvas::default()
+        .block(Block::default().borders(Borders::ALL).title(format!("Hang fan. Wrong letters [{}]",app.fails)))
+        .paint(|ctx| {
+            ctx.draw(&TRIANGLE1);
+            ctx.draw(&TRIANGLE2);
+            ctx.draw(&TRIANGLE3);
+            ctx.draw(&TRIANGLE4);
+            ctx.draw(&CENTER);
+            ctx.draw(&LINE_1);
+            ctx.draw(&LINE_2);
         })
-        .collect();
-    let messages =
-        List::new(messages).block(Block::default().borders(Borders::ALL).title("Hang Fan"));
-    f.render_widget(messages, chunks[2]);
+        .x_bounds([0.0, 100.0])
+        .y_bounds([0.0, 100.0]);
+    f.render_widget(canvas, chunks[3]);
 }
