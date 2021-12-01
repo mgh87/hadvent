@@ -148,8 +148,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 KeyCode::Char(c) => {
                     if c.is_ascii_alphabetic() {
                         let upper_c = c.to_ascii_uppercase();
-                        if !app.input.contains(&*upper_c.to_string()) && !app.hidden_letters.contains(&upper_c.clone()) {
+                        if !app.input.contains(&*upper_c.to_string()) && app.hidden_letters.contains(&upper_c) {
                             app.input = app.input.add(&*upper_c.to_string());
+                            app.hidden_letters.remove(&upper_c);
                         }
                         else {
                             app.fails = app.fails + 1;
