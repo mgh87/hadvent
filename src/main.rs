@@ -23,12 +23,12 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use unicode_width::UnicodeWidthStr;
 use tui::widgets::canvas::{Canvas, Rectangle, Line};
 use std::ops::Add;
 use hang::Triangle;
 use tui::layout::Alignment;
 use std::collections::HashSet;
+use itertools::sorted;
 
 const TRIANGLE1: Triangle =  Triangle {
     p1: (10.0, 10.0),
@@ -84,12 +84,11 @@ const LINE_2: Line =  Line {
 
 /// App holds the state of the application
 struct App {
-    /// Current value of the input box
-    input: String,
     /// History of recorded messages
     word: String,
     fails: i8,
-    hidden_letters: HashSet<char>
+    hidden_letters: HashSet<char>,
+    typed_letters: HashSet<char>
 }
 
 impl Default for App {
@@ -100,12 +99,12 @@ impl Default for App {
 
 impl App {
     fn new(word: String) -> App {
-        let upperword = word.to_uppercase();
+        let upper_word = word.to_uppercase();
         App {
-            input: String::new(),
-            hidden_letters: upperword.chars().collect::<HashSet<_>>(),
-            word: upperword,
+            hidden_letters: upper_word.chars().collect::<HashSet<_>>(),
+            word: upper_word,
             fails: 0,
+            typed_letters: HashSet::new()
         }
     }
 
@@ -148,13 +147,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 KeyCode::Char(c) => {
                     if c.is_ascii_alphabetic() {
                         let upper_c = c.to_ascii_uppercase();
-                        if !app.input.contains(&*upper_c.to_string()) && app.hidden_letters.contains(&upper_c) {
-                            app.input = app.input.add(&*upper_c.to_string());
-                            app.hidden_letters.remove(&upper_c);
-                        }
-                        else {
+                        if !app.typed_letters.contains(&upper_c) && !app.hidden_letters.contains(&upper_c) {
                             app.fails = app.fails + 1;
                         }
+                        app.hidden_letters.remove(&upper_c);
+                        app.typed_letters.insert(upper_c);
                     }
 
                 }
@@ -196,18 +193,17 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let help_message = Paragraph::new(text);
     f.render_widget(help_message, chunks[0]);
 
-    let input = Paragraph::new(app.input.as_ref())
+    let input = Paragraph::new(sorted(app.typed_letters.iter()).fold(String::new(), |acc, x| acc + " "+ &*x.to_string()))
         .style(Style::default())
+        .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).title("Typed letters"));
     f.render_widget(input, chunks[1]);
-    f.set_cursor(
-                // Put cursor past the end of the input text
-                chunks[1].x + app.input.width() as u16 + 1,
-                // Move one line down, from the border to the input line
-                chunks[1].y + 1,
-            );
 
-    let word = Paragraph::new(app.word.as_ref())
+
+    let rendered_word = app.word.clone().split("").fold(String::new(), |acc, s| acc.add(" ").add(s));
+    let replaced_word = app.hidden_letters.iter().fold(rendered_word,|acc,c|  acc.replace(&*c.to_string(),"_"));
+
+    let word = Paragraph::new(replaced_word)
         .style(Style::default())
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman [{}]",app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))));
