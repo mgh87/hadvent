@@ -25,7 +25,7 @@ use tui::{
 };
 use tui::widgets::canvas::{Canvas, Rectangle, Line, Context};
 use std::ops::Add;
-use hang::Triangle;
+use hadvent::Triangle;
 use tui::layout::Alignment;
 use std::collections::{HashSet};
 use itertools::sorted;
