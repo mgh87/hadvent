@@ -2,7 +2,7 @@
 name = "hadvent"
 version = "0.1.0"
 authors = ["Martin Huter <martin.huter@viesure.io>"]
-license = "Apache-2.0"
+license = "MIT"
 description = "A game of hangman"
 readme = "README.md"
 homepage = "https://github.com/mgh87/h-advent"
