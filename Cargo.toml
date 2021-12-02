@@ -1,6 +1,6 @@
 [package]
 name = "hadvent"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Martin Huter <martin.huter@viesure.io>"]
 license = "MIT"
 description = "A game of hangman"
