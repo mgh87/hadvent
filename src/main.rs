@@ -29,6 +29,7 @@ use hang::Triangle;
 use tui::layout::Alignment;
 use std::collections::{HashSet};
 use itertools::sorted;
+use structopt::StructOpt;
 
 const TRIANGLE1: Triangle =  Triangle {
     p1: (10.0, 10.0),
@@ -110,6 +111,11 @@ impl App {
 
 }
 
+#[derive(StructOpt)]
+struct Cli {
+    /// The path to the file to read
+    riddle: Option<String>,
+}
 
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -120,8 +126,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    let args = Cli::from_args();
+
     // create app and run it
-    let app = App::default();
+    let app = match args.riddle {
+        Some(riddle) => App::new(riddle),
+        None => App::default(),
+    };
     let res = run_app(&mut terminal, app);
 
     // restore terminal
@@ -147,7 +158,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         if let Event::Key(key) = event::read()? {
             match key.code {
                 KeyCode::Char(c) => {
-                    if c.is_ascii_alphabetic() && app.fails < 6 {
+                    if c.is_ascii_alphabetic() && app.fails < 6 && !app.hidden_letters.is_empty() {
                         let upper_c = c.to_ascii_uppercase();
                         if !app.typed_letters.contains(&upper_c) && !app.hidden_letters.contains(&upper_c) {
                             app.fails = app.fails + 1;
@@ -181,7 +192,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(f.size());
 
-    let (msg,msg2, style) =  (
+    let (game_running, game_over, won, style) =  (
             vec![
                 Span::raw("Press "),
                 Span::styled("ESC", Style::default().add_modifier(Modifier::BOLD)),
@@ -192,13 +203,20 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 Span::styled("GAME OVER", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
                 Span::raw(" ECS to exit. ")
             ],
+            vec![
+                Span::styled("You Won", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                Span::raw(" ECS to exit. ")
+            ],
             Style::default().add_modifier(Modifier::RAPID_BLINK),
         );
-    let mut text =
-        match app.fails {
-            0 | 1 | 2 | 3 | 4 | 5 => Text::from(Spans::from(msg)),
-            _ => Text::from(Spans::from(msg2))
-        };
+    let mut text = if app.hidden_letters.is_empty() {
+        Text::from(Spans::from(won))
+    } else if app.fails >= 6 {
+        Text::from(Spans::from(game_over))
+    } else {
+        Text::from(Spans::from(game_running))
+    };
+
 
     text.patch_style(style);
     let help_message = Paragraph::new(text);
@@ -217,7 +235,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let word = Paragraph::new(replaced_word)
         .style(Style::default())
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman [{}]",app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))));
+        .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman"))); //,app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))
     f.render_widget(word, chunks[2]);
 
     let mut canvas = Canvas::default()
