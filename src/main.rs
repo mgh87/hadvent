@@ -23,11 +23,11 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use tui::widgets::canvas::{Canvas, Rectangle, Line};
+use tui::widgets::canvas::{Canvas, Rectangle, Line, Context};
 use std::ops::Add;
 use hang::Triangle;
 use tui::layout::Alignment;
-use std::collections::HashSet;
+use std::collections::{HashSet};
 use itertools::sorted;
 
 const TRIANGLE1: Triangle =  Triangle {
@@ -110,6 +110,8 @@ impl App {
 
 }
 
+
+
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
     enable_raw_mode()?;
@@ -145,7 +147,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
         if let Event::Key(key) = event::read()? {
             match key.code {
                 KeyCode::Char(c) => {
-                    if c.is_ascii_alphabetic() {
+                    if c.is_ascii_alphabetic() && app.fails < 6 {
                         let upper_c = c.to_ascii_uppercase();
                         if !app.typed_letters.contains(&upper_c) && !app.hidden_letters.contains(&upper_c) {
                             app.fails = app.fails + 1;
@@ -179,16 +181,25 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(f.size());
 
-    let (msg, style) =  (
+    let (msg,msg2, style) =  (
             vec![
                 Span::raw("Press "),
                 Span::styled("ESC", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" to exit. "),
                 Span::raw("Type to play hangman."),
             ],
+            vec![
+                Span::styled("GAME OVER", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+                Span::raw(" ECS to exit. ")
+            ],
             Style::default().add_modifier(Modifier::RAPID_BLINK),
         );
-    let mut text = Text::from(Spans::from(msg));
+    let mut text =
+        match app.fails {
+            0 | 1 | 2 | 3 | 4 | 5 => Text::from(Spans::from(msg)),
+            _ => Text::from(Spans::from(msg2))
+        };
+
     text.patch_style(style);
     let help_message = Paragraph::new(text);
     f.render_widget(help_message, chunks[0]);
@@ -209,18 +220,49 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman [{}]",app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))));
     f.render_widget(word, chunks[2]);
 
-    let canvas = Canvas::default()
-        .block(Block::default().borders(Borders::ALL).title(format!("Hang fan. Wrong letters [{}]",app.fails)))
-        .paint(|ctx| {
-            ctx.draw(&TRIANGLE1);
-            ctx.draw(&TRIANGLE2);
-            ctx.draw(&TRIANGLE3);
-            ctx.draw(&TRIANGLE4);
-            ctx.draw(&CENTER);
-            ctx.draw(&LINE_1);
-            ctx.draw(&LINE_2);
-        })
-        .x_bounds([0.0, 100.0])
+    let mut canvas = Canvas::default()
+        .block(Block::default().borders(Borders::ALL).title(format!("Hang fan. Wrong letters [{}]",app.fails)));
+
+    canvas = canvas.paint(|ctx :&mut Context| {
+        match app.fails {
+            0 => {},
+            1 => ctx.draw(&TRIANGLE1),
+            2 => {
+                ctx.draw(&TRIANGLE1);
+                ctx.draw(&TRIANGLE2);
+            },
+            3 => {
+                ctx.draw(&TRIANGLE1);
+                ctx.draw(&TRIANGLE2);
+                ctx.draw(&TRIANGLE3);
+            },
+            4 => {
+                ctx.draw(&TRIANGLE1);
+                ctx.draw(&TRIANGLE2);
+                ctx.draw(&TRIANGLE3);
+                ctx.draw(&TRIANGLE4);
+            },
+            5 => {
+                ctx.draw(&TRIANGLE1);
+                ctx.draw(&TRIANGLE2);
+                ctx.draw(&TRIANGLE3);
+                ctx.draw(&TRIANGLE4);
+                ctx.draw(&CENTER);
+            },
+            _ => {
+                ctx.draw(&TRIANGLE1);
+                ctx.draw(&TRIANGLE2);
+                ctx.draw(&TRIANGLE3);
+                ctx.draw(&TRIANGLE4);
+                ctx.draw(&CENTER);
+                ctx.draw(&LINE_1);
+                ctx.draw(&LINE_2);
+            }
+        }
+    });
+
+    canvas = canvas.x_bounds([0.0, 100.0])
         .y_bounds([0.0, 100.0]);
+
     f.render_widget(canvas, chunks[3]);
 }
