@@ -1,6 +1,6 @@
 # Christmas challenge
 
-This cli repository is the implementation of a christmas hangman challenge
+This cli repository is the implementation of a Christmas hangman challenge
 
 # Installation with Cargo
 
@@ -18,7 +18,7 @@ cargo install hadvent
 
 Only single words can be used for the game.
 
-## Example scrrens
+## Example screens
 
 ### Start of game
 
