@@ -23,7 +23,7 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use tui::widgets::canvas::{Canvas, Rectangle, Context};
+use tui::widgets::canvas::{Canvas, Context};
 use std::ops::Add;
 use hadvent::{GeneralSquare};
 use tui::layout::Alignment;
@@ -72,9 +72,7 @@ const TREE4: GeneralSquare =  GeneralSquare {
 };
 
 
-/// App holds the state of the application
 struct App {
-    /// History of recorded messages
     word: String,
     fails: i8,
     hidden_letters: HashSet<char>,
@@ -224,11 +222,11 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let word = Paragraph::new(replaced_word)
         .style(Style::default())
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman"))); //,app.hidden_letters.iter().fold(String::new(), |acc, x| acc + &*x.to_string()))
+        .block(Block::default().borders(Borders::ALL).title(format!("Current State of hangman")));
     f.render_widget(word, chunks[2]);
 
     let mut canvas = Canvas::default()
-        .block(Block::default().borders(Borders::ALL).title(format!("Hang fan. Wrong letters [{}]",app.fails)));
+        .block(Block::default().borders(Borders::ALL).title(format!("Hang tree. Wrong letters [{}]",app.fails)));
 
     canvas = canvas.paint(|ctx :&mut Context| {
         match app.fails {
