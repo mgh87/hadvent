@@ -5,6 +5,7 @@ This cli repository is the implementation of a Christmas hangman challenge
 # Installation with Cargo
 
 Only the installation with cargo is possible.
+https://crates.io/crates/hadvent
 
 ```
 cargo install hadvent
