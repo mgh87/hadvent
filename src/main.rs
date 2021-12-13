@@ -23,63 +23,52 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use tui::widgets::canvas::{Canvas, Rectangle, Line, Context};
+use tui::widgets::canvas::{Canvas, Rectangle, Context};
 use std::ops::Add;
-use hadvent::Triangle;
+use hadvent::{GeneralSquare};
 use tui::layout::Alignment;
 use std::collections::{HashSet};
 use itertools::sorted;
 use structopt::StructOpt;
 
-const TRIANGLE1: Triangle =  Triangle {
-    p1: (10.0, 10.0),
-    p2: (45.0, 45.0),
-    p3: (50.0, 10.0),
-    color: Color::Yellow,
+const STOMP: GeneralSquare =  GeneralSquare {
+    p1: (40.0, 2.0),
+    p2: (60.0, 2.0),
+    p3: (55.0, 15.0),
+    p4: (45.0, 15.0),
+    color: Color::LightRed,
 };
 
-const TRIANGLE2: Triangle =  Triangle {
-    p1: (55.0, 45.0),
-    p2: (90.0, 50.0),
-    p3: (90.0, 10.0),
-    color: Color::Yellow,
+const TREE1: GeneralSquare =  GeneralSquare {
+    p1: (20.0, 15.0),
+    p2: (80.0, 15.0),
+    p3: (65.0, 32.5),
+    p4: (35.0, 32.5),
+    color: Color::LightGreen,
 };
 
-const TRIANGLE3: Triangle =  Triangle {
-    p2: (90.0, 90.0),
-    p1: (50.0, 90.0),
-    p3: (55.0, 55.0),
-    color: Color::Yellow,
+const TREE2: GeneralSquare =  GeneralSquare {
+    p1: (25.0, 32.5),
+    p2: (75.0, 32.5),
+    p3: (60.0, 50.0),
+    p4: (40.0, 50.0),
+    color: Color::LightGreen,
 };
 
-const TRIANGLE4: Triangle =  Triangle {
-    p1: (10.0, 90.0),
-    p2: (45.0, 55.0),
-    p3: (10.0, 50.0),
-    color: Color::Yellow,
+const TREE3: GeneralSquare =  GeneralSquare {
+    p1: (30.0, 50.0),
+    p2: (70.0, 50.0),
+    p3: (55.0, 67.5),
+    p4: (45.0, 67.5),
+    color: Color::LightGreen,
 };
 
-const CENTER: Rectangle =  Rectangle {
-    x: 45.0,
-    y: 45.0,
-    width: 10.0,
-    color: Color::Yellow,
-    height: 10.0
-};
-
-const LINE_1: Line =  Line {
-    x1: 45.0,
-    y1: 45.0,
-    x2: 55.0,
-    y2: 55.0,
-    color: Color::LightGreen
-};
-const LINE_2: Line =  Line {
-    x1: 45.0,
-    y1: 55.0,
-    x2: 55.0,
-    y2: 45.0,
-    color: Color::LightGreen
+const TREE4: GeneralSquare =  GeneralSquare {
+    p1: (35.0, 67.5),
+    p2: (65.0, 67.5),
+    p3: (50.0, 85.0),
+    p4: (50.0, 85.0),
+    color: Color::LightGreen,
 };
 
 
@@ -94,7 +83,7 @@ struct App {
 
 impl Default for App {
     fn default() -> App {
-        App::new(String::from("Masupilami"))
+        App::new(String::from("MerryChristmas"))
     }
 }
 
@@ -244,37 +233,36 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     canvas = canvas.paint(|ctx :&mut Context| {
         match app.fails {
             0 => {},
-            1 => ctx.draw(&TRIANGLE1),
+            1 => ctx.draw(&STOMP),
             2 => {
-                ctx.draw(&TRIANGLE1);
-                ctx.draw(&TRIANGLE2);
+                ctx.draw(&STOMP);
+                ctx.draw(&TREE1);
             },
             3 => {
-                ctx.draw(&TRIANGLE1);
-                ctx.draw(&TRIANGLE2);
-                ctx.draw(&TRIANGLE3);
+                ctx.draw(&STOMP);
+                ctx.draw(&TREE1);
+                ctx.draw(&TREE2);
             },
             4 => {
-                ctx.draw(&TRIANGLE1);
-                ctx.draw(&TRIANGLE2);
-                ctx.draw(&TRIANGLE3);
-                ctx.draw(&TRIANGLE4);
+                ctx.draw(&STOMP);
+                ctx.draw(&TREE1);
+                ctx.draw(&TREE2);
+                ctx.draw(&TREE3);
             },
             5 => {
-                ctx.draw(&TRIANGLE1);
-                ctx.draw(&TRIANGLE2);
-                ctx.draw(&TRIANGLE3);
-                ctx.draw(&TRIANGLE4);
-                ctx.draw(&CENTER);
+                ctx.draw(&STOMP);
+                ctx.draw(&TREE1);
+                ctx.draw(&TREE2);
+                ctx.draw(&TREE3);
+                ctx.draw(&TREE4);
             },
             _ => {
-                ctx.draw(&TRIANGLE1);
-                ctx.draw(&TRIANGLE2);
-                ctx.draw(&TRIANGLE3);
-                ctx.draw(&TRIANGLE4);
-                ctx.draw(&CENTER);
-                ctx.draw(&LINE_1);
-                ctx.draw(&LINE_2);
+                ctx.draw(&STOMP);
+                ctx.draw(&TREE1);
+                ctx.draw(&TREE2);
+                ctx.draw(&TREE3);
+                ctx.draw(&TREE4);
+                ctx.print(45.0, 95.0, "**** Game Over ****", Color::Red);
             }
         }
     });
