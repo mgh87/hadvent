@@ -2,6 +2,13 @@
 
 This cli repository is the implementation of a christmas hangman challenge
 
+# Installation with Cargo
+
+Only the installation with cargo is possible.
+
+```
+cargo install hadvent
+```
 
 # Run the tool
 
@@ -9,7 +16,7 @@ This cli repository is the implementation of a christmas hangman challenge
 
 `hadvent MyRiddleWord` will start the game with the word MyRiddleword
 
-Currently, only single words can be used for the game.
+Only single words can be used for the game.
 
 ## Example scrrens
 
