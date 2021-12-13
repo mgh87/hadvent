@@ -23,12 +23,12 @@ Only single words can be used for the game.
 
 ### Start of game
 
-![Start](./start.png)
+![Start](pictures/start.png)
 
 ### Victory Screen
 
-![Victory](./victory.png)
+![Victory](pictures/victory.png)
 
 ### Game Over Screen
 
-![Game Over](./game_over.png)
+![Game Over](pictures/game_over.png)
